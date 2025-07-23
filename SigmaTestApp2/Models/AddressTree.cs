@@ -21,8 +21,8 @@ namespace SigmaTestApp2.Models
             }
             try
             {
-                var reader = new StreamReader(filePath);
-                var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+                using var reader = new StreamReader(filePath);
+                using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
                 csv.Read();
                 while (csv.Read())
                 {
