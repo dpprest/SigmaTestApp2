@@ -11,7 +11,6 @@ namespace SigmaTestApp2.Models
     public class AddressTree
     {
         private readonly AddressTreeNode _root = new("Root", "Root", 0);
-
         public void ImportFromCsv(string filePath)
         {
             if (!File.Exists(filePath))
@@ -24,9 +23,10 @@ namespace SigmaTestApp2.Models
                 using var reader = new StreamReader(filePath);
                 using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
                 csv.Read();
+                csv.ReadHeader();
                 while (csv.Read())
                 {
-                    string fullAddress = csv.GetField("Полный адрес: ");
+                    string fullAddress = csv.GetField("Full legal address");
                     string[] addressParts = fullAddress.Split(',');
                     for (int i = 0; i < addressParts.Length; i++)
                     {
@@ -122,6 +122,44 @@ namespace SigmaTestApp2.Models
         {
             if (element == null) return -1;
             return element.Level;
+        }
+        public AddressTreeNode? FindCommonAncestor(IEnumerable<AddressTreeElement> elements)
+        {
+            if (elements == null || !elements.Any())
+            {
+                Console.WriteLine(" коллекция не содержит элементов");
+                return null;
+            }
+            List<string[]> allPaths = new List<string[]>();
+            foreach (var element in elements)
+            {
+                allPaths.Add(element.FullPath.Split(new[] { ", " }, StringSplitOptions.None));
+            }
+            int minLength = allPaths.Min(p => p.Length);
+            AddressTreeNode commonAncestor = _root;
+
+            for (int level = 1; level < minLength; level++)
+            {
+                string currentSegment = allPaths[0] [level];
+            
+                foreach (var path in allPaths)
+                {
+                    if (path[level] != currentSegment)
+                    {
+                        return commonAncestor;
+                    }
+                }
+                if (commonAncestor.Nodes.TryGetValue(currentSegment, out var nextNode))
+                {
+                    commonAncestor = nextNode;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return commonAncestor;
         }
     }
 }
